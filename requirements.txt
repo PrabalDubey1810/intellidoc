@@ -1,0 +1,7 @@
+streamlit
+litellm
+pypdf
+gTTS
+graphviz
+python-pptx
+extra-streamlit-components
