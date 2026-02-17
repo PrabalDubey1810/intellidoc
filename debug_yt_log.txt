@@ -1,0 +1,3 @@
+Fetching for fI_ruddnvmM...
+Type: <class 'youtube_transcript_api._transcripts.FetchedTranscript'>
+Content: FetchedTranscript(snippets=[FetchedTranscriptSnippet(text='Well, Google is back to doing Google', start=0.08, duration=3.359), FetchedTranscriptSnippet(text='things. After delaying the Android 17', start=1.76, duration=4.079), FetchedTranscriptSnippet(text="beta 1, they've now quietly released it", start=3.439, duration=4.081), FetchedTranscriptSnippet(text='and I have it running on the Pixel 10.', start=5.839, duration=2.961), FetchedTranscriptSnippet(text='So, you know what? Hit that subscribe

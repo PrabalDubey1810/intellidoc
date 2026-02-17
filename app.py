@@ -1,14 +1,19 @@
 import streamlit as st
 import litellm
 import urllib.request
+
 from pypdf import PdfReader
 import auth
 from gtts import gTTS
 import io
 import graphviz
 import json
-from pptx import Presentation
 import extra_streamlit_components as stx
+import youtube_utils
+import slidesgpt_utils
+import gemini_utils
+import pptx_utils
+import io
 
 st.set_page_config(page_title="Chatbot - Powered by Open Source LLM")
 
@@ -19,12 +24,8 @@ def get_manager():
 cookie_manager = get_manager()
 
 # Application Logic
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "ollama/minimax-m2:cloud"
+from llm_utils import generate_response, MODEL_NAME
 
-
-
-# -------- PDF TEXT EXTRACTION --------
 # -------- PDF TEXT EXTRACTION --------
 def extract_pdf_text(uploaded_files):
     text = ""
@@ -41,42 +42,7 @@ def extract_pdf_text(uploaded_files):
 
 
 # -------- LLM RESPONSE --------
-def generate_response(messages):
-    full_response = ""
-    
-    # Strip 'ollama/' prefix if present
-    api_model = MODEL_NAME.replace("ollama/", "")
-    
-    url = f"{OLLAMA_BASE_URL}/api/chat"
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "model": api_model,
-        "messages": messages,
-        "stream": True
-    }
-    
-    try:
-        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method="POST")
-        with urllib.request.urlopen(req) as response:
-            for line in response:
-                if line:
-                    decoded_line = line.decode('utf-8').strip()
-                    if not decoded_line:
-                        continue
-                    try:
-                        json_obj = json.loads(decoded_line)
-                        if "message" in json_obj:
-                            content = json_obj["message"].get("content", "")
-                            if content:
-                                full_response += content
-                        # Ignore 'thinking' field or empty content
-                    except json.JSONDecodeError:
-                        continue
-    except Exception as e:
-        st.error(f"Error generating response: {e}")
-        return f"Error: {e}"
-
-    return full_response
+# Moved to llm_utils.py
 
 
 # -------- AUTH & SESSION --------
@@ -91,13 +57,32 @@ if "messages" not in st.session_state:
 if "pdf_context" not in st.session_state:
     st.session_state.pdf_context = ""
 
+if "youtube_context" not in st.session_state:
+    st.session_state.youtube_context = ""
+
+if "youtube_messages" not in st.session_state:
+    st.session_state.youtube_messages = []
+
 
 def main_app():
     st.sidebar.title(f"Welcome, {st.session_state.user}")
     if st.sidebar.button("Logout"):
         st.session_state.user = None
+        st.session_state.logout_clicked = True
         cookie_manager.delete("user_token")
         st.rerun()
+
+    # Telegram Bot Link
+    st.sidebar.markdown(
+        """
+        <a href="https://t.me/ComedyhackersBOT" target="_blank" style="text-decoration: none;">
+            <div style="background-color: #0088cc; color: white; padding: 10px; border-radius: 5px; text-align: center; margin-bottom: 20px;">
+                <span style="font-size: 1.2rem;">🤖</span> Chat with Telegram Bot
+            </div>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Admin Panel
     if auth.is_admin(st.session_state.user):
@@ -123,7 +108,7 @@ def main_app():
 
     # Interactive Features
     with st.sidebar.expander("Interactive Features"):
-        feature_mode = st.radio("Select Mode", ["Chat", "Audio Summary", "Quiz", "Knowledge Graph", "Slide Deck"])
+        feature_mode = st.radio("Select Mode", ["Chat", "Audio Summary", "Quiz", "Knowledge Graph", "Slide Deck", "YouTube Assistant"])
 
     if feature_mode == "Chat":
         for msg in st.session_state.messages:
@@ -171,9 +156,14 @@ def main_app():
                     prompt = f"""Generate 3 multiple-choice questions based on the text. 
                     Return ONLY raw JSON (no markdown formatting) in this format:
                     [
-                        {{"question": "...", "options": ["A", "B", "C"], "answer": "A"}},
+                        {{
+                            "question": "Question text?", 
+                            "options": ["Option 1", "Option 2", "Option 3", "Option 4"], 
+                            "answer": "Option 2"
+                        }},
                         ...
                     ]
+                    IMPORTANT: The 'answer' field MUST be an EXACT string match to one of the items in the 'options' list. Do not use letters like A, B, C, D unless they are part of the option text.
                     Text: {st.session_state.pdf_context[:3000]}"""
                     
                     messages = [{"role": "user", "content": prompt}]
@@ -229,59 +219,107 @@ def main_app():
                          st.write("Raw response:", response)
 
     elif feature_mode == "Slide Deck":
-        st.subheader("📽️ Smart Slide Deck")
+        st.subheader("📽️ Smart Slide Deck (via Google Gemini)")
+        
+        # API Key (Hardcoded as requested)
+        api_key = "AIzaSyBjKHF_ajrqyiNjUUgFvoOZWaXMtpRS-CM"
+        
         if st.button("Generate Slides"):
              if st.session_state.pdf_context:
-                with st.spinner("Generating slide content..."):
-                    prompt = f"""Generate a 5-slide presentation based on the text.
-                    Return ONLY raw JSON (no markdown) in this format:
-                    [
-                        {{"title": "Slide Title", "bullets": ["Point 1", "Point 2", "Point 3"]}},
-                        ...
-                    ]
-                    Text: {st.session_state.pdf_context[:4000]}"""
+                with st.spinner("Analyzing text & Designing slides..."):
                     
-                    messages = [{"role": "user", "content": prompt}]
-                    response = generate_response(messages)
+                    # 1. Get structured content from Gemini
+                    slides_data = gemini_utils.generate_slide_content(st.session_state.pdf_context, api_key)
                     
-                    try:
-                        cleaned_response = response.replace("```json", "").replace("```", "").strip()
-                        slides_data = json.loads(cleaned_response)
-                        
-                        prs = Presentation()
-                        
-                        # Title Slide
-                        title_slide_layout = prs.slide_layouts[0]
-                        slide = prs.slides.add_slide(title_slide_layout)
-                        title = slide.shapes.title
-                        subtitle = slide.placeholders[1]
-                        title.text = "Document Summary"
-                        subtitle.text = "Generated by IntelliDoc AI"
-                        
-                        # Content Slides
-                        bullet_slide_layout = prs.slide_layouts[1]
-                        
-                        for slide_data in slides_data:
-                            slide = prs.slides.add_slide(bullet_slide_layout)
-                            shapes = slide.shapes
-                            title_shape = shapes.title
-                            body_shape = shapes.placeholders[1]
+                    if isinstance(slides_data, dict) and "error" in slides_data:
+                        st.error(f"Gemini API Error: {slides_data['error']}")
+                    else:
+                        try:
+                            # 2. Build PPTX locally with Styling
+                            prs = pptx_utils.create_styled_presentation(slides_data)
                             
-                            title_shape.text = slide_data.get("title", "Updated Slide")
+                            binary_output = io.BytesIO()
+                            prs.save(binary_output)
                             
-                            tf = body_shape.text_frame
-                            for bullet in slide_data.get("bullets", []):
-                                p = tf.add_paragraph()
-                                p.text = bullet
-                                p.level = 0
-                        
-                        binary_output = io.BytesIO()
-                        prs.save(binary_output)
-                        st.download_button("Download PPTX", binary_output.getvalue(), "presentation.pptx")
-                        
-                    except Exception as e:
-                         st.error(f"Failed to generate slides: {e}")
-                         st.write("Raw response:", response)
+                            st.success("✅ Designer Slides generated successfully!")
+                            st.download_button(
+                                label="Download Designer PowerPoint (.pptx)",
+                                data=binary_output.getvalue(),
+                                file_name="gemini_designer_presentation.pptx",
+                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                            )
+                            
+                            # Preview Content
+                            with st.expander("Preview Slide Content"):
+                                st.json(slides_data)
+                                
+                        except Exception as e:
+                             st.error(f"Failed to build PPTX file: {e}")
+
+             else:
+                 st.warning("Please upload a PDF first to generate content.")
+
+
+
+
+
+
+    elif feature_mode == "YouTube Assistant":
+        st.subheader("📺 YouTube Assistant")
+        
+        youtube_url = st.text_input("Enter YouTube URL")
+        
+        if st.button("Process Video"):
+            if youtube_url:
+                video_id = youtube_utils.extract_video_id(youtube_url)
+                if video_id:
+                    with st.spinner("Fetching transcript..."):
+                        transcript = youtube_utils.get_transcript_text(video_id)
+                        if "Error" not in transcript:
+                            st.session_state.youtube_context = transcript
+                            st.session_state.youtube_messages = [] # Reset chat on new video
+                            st.success("Transcript fetched successfully!")
+                            
+                            # Generate Summary
+                            with st.spinner("Generating summary..."):
+                                messages = [
+                                    {"role": "system", "content": "Summarize this video transcript in 5 concise bullet points."},
+                                    {"role": "user", "content": transcript[:10000]} # Limit context
+                                ]
+                                st.session_state.youtube_summary = generate_response(messages)
+                        else:
+                            st.error(f"Could not retrieve transcript. The video might not have captions enabled. ({transcript})")
+                else:
+                    st.error("Invalid YouTube URL")
+        
+        # Display Summary
+        if st.session_state.get("youtube_summary"):
+            st.write("### Video Summary")
+            st.write(st.session_state.youtube_summary)
+
+        # Chat Interface for YouTube
+        if st.session_state.get("youtube_context"):
+            st.divider()
+            st.subheader("💬 Chat with Video")
+            
+            for msg in st.session_state.youtube_messages:
+                st.chat_message(msg["role"]).write(msg["content"])
+
+            if prompt := st.chat_input("Ask about the video..."):
+                st.session_state.youtube_messages.append({"role": "user", "content": prompt})
+                st.chat_message("user").write(prompt)
+                
+                # Generate Answer
+                messages = [
+                    {"role": "system", "content": f"You are a helpful assistant answering questions based on the following video transcript:\n\n{st.session_state.youtube_context[:15000]}"}
+                ]
+                # Filter out messages that might have "system" role if any (though we only append user/assistant)
+                chat_history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.youtube_messages]
+                messages.extend(chat_history)
+                
+                response = generate_response(messages)
+                st.session_state.youtube_messages.append({"role": "assistant", "content": response})
+                st.chat_message("assistant").write(response)
 
 
 def login_page():
@@ -296,6 +334,7 @@ def login_page():
         if st.button("Login", use_container_width=True):
             if auth.authenticate_user(username, password):
                 st.session_state.user = username
+                st.session_state.logout_clicked = False
                 cookie_manager.set("user_token", username)
                 history = auth.get_chat_history(username)
                 if history:
@@ -325,14 +364,22 @@ def register_page():
 
 # Check for existing session
 cookies = cookie_manager.get_all()
-if not st.session_state.user and "user_token" in cookies:
-    username = cookies["user_token"]
-    st.session_state.user = username
-    history = auth.get_chat_history(username)
-    if history:
-        st.session_state.messages = history
+token = cookies.get("user_token")
+
+if not st.session_state.user and token:
+    if st.session_state.get("logout_clicked"):
+        # User just logged out, ignoring the lingering cookie
+        # Try deleting it again to be sure
+        cookie_manager.delete("user_token")
     else:
-        st.session_state.messages = [{"role": "assistant", "content": "Hi! You can chat with me or upload a PDF 📄"}]
+        # Valid auto-login
+        username = token
+        st.session_state.user = username
+        history = auth.get_chat_history(username)
+        if history:
+            st.session_state.messages = history
+        else:
+            st.session_state.messages = [{"role": "assistant", "content": "Hi! You can chat with me or upload a PDF 📄"}]
 
 
 if st.session_state.user:

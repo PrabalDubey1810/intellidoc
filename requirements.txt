@@ -5,3 +5,5 @@ gTTS
 graphviz
 python-pptx
 extra-streamlit-components
+python-telegram-bot
+youtube-transcript-api
