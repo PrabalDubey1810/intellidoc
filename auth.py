@@ -30,6 +30,18 @@ def init_db():
         );
         """
     )
+    c.execute(
+        """
+        CREATE TABLE IF NOT EXISTS pdfs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            content TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(username) REFERENCES users(username)
+        );
+        """
+    )
     conn.commit()
     conn.close()
 
@@ -127,3 +139,78 @@ def get_chat_history(username):
     chats = c.fetchall()
     conn.close()
     return [{"role": row[0], "content": row[1]} for row in chats]
+
+
+def save_user_pdf(username, filename, content):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO pdfs (username, filename, content) VALUES (?, ?, ?)",
+        (username, filename, content),
+    )
+    pdf_id = c.lastrowid
+    conn.commit()
+    conn.close()
+    return pdf_id
+
+
+def get_user_pdfs(username):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute(
+        "SELECT id, filename, timestamp FROM pdfs WHERE username = ? ORDER BY timestamp DESC",
+        (username,),
+    )
+    pdfs = c.fetchall()
+    conn.close()
+    return [{"id": row[0], "filename": row[1], "timestamp": row[2]} for row in pdfs]
+
+
+def get_pdf_content(pdf_id, username):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute(
+        "SELECT content FROM pdfs WHERE id = ? AND username = ?",
+        (pdf_id, username),
+    )
+    result = c.fetchone()
+    conn.close()
+    return result[0] if result else None
+
+
+def delete_user_pdf(pdf_id, username):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute(
+        "DELETE FROM pdfs WHERE id = ? AND username = ?",
+        (pdf_id, username),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_last_active_pdfs(username):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT last_active_pdfs FROM users WHERE username = ?", (username,))
+    result = c.fetchone()
+    conn.close()
+    if result and result[0]:
+        try:
+            import json
+            return json.loads(result[0])
+        except:
+            return []
+    return []
+
+
+def save_last_active_pdfs(username, pdf_ids):
+    import json
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute(
+        "UPDATE users SET last_active_pdfs = ? WHERE username = ?",
+        (json.dumps(pdf_ids), username),
+    )
+    conn.commit()
+    conn.close()

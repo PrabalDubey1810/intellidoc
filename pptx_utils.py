@@ -14,17 +14,45 @@ def apply_designer_styling(prs):
     # We will apply background color to each slide individually for maximum control
     return prs
 
-def create_styled_presentation(slides_data):
+THEMES = {
+    "midnight": {
+        "BG_COLOR": RGBColor(20, 20, 30),
+        "TITLE_COLOR": RGBColor(255, 200, 0),
+        "TEXT_COLOR": RGBColor(240, 240, 240),
+        "ACCENT_COLOR": RGBColor(0, 150, 255)
+    },
+    "ocean": {
+        "BG_COLOR": RGBColor(10, 45, 60),
+        "TITLE_COLOR": RGBColor(0, 255, 200),
+        "TEXT_COLOR": RGBColor(230, 250, 255),
+        "ACCENT_COLOR": RGBColor(0, 180, 220)
+    },
+    "minimal": {
+        "BG_COLOR": RGBColor(255, 255, 255),
+        "TITLE_COLOR": RGBColor(0, 0, 0),
+        "TEXT_COLOR": RGBColor(60, 60, 60),
+        "ACCENT_COLOR": RGBColor(100, 100, 100)
+    },
+    "sunset": {
+        "BG_COLOR": RGBColor(45, 10, 50),
+        "TITLE_COLOR": RGBColor(255, 120, 0),
+        "TEXT_COLOR": RGBColor(255, 240, 230),
+        "ACCENT_COLOR": RGBColor(180, 50, 200)
+    }
+}
+
+def create_styled_presentation(slides_data, theme_name="midnight"):
     """
-    Creates a styled PowerPoint presentation from structured data.
+    Creates a styled PowerPoint presentation from structured data using a theme.
     """
     prs = Presentation()
     
-    # Define Theme Colors
-    BG_COLOR = RGBColor(20, 20, 30) # Dark Blue/Black
-    TITLE_COLOR = RGBColor(255, 200, 0) # Gold/Yellow
-    TEXT_COLOR = RGBColor(240, 240, 240) # White/Light Gray
-    ACCENT_COLOR = RGBColor(0, 150, 255) # Bright Blue
+    # Select Theme
+    theme = THEMES.get(theme_name, THEMES["midnight"])
+    BG_COLOR = theme["BG_COLOR"]
+    TITLE_COLOR = theme["TITLE_COLOR"]
+    TEXT_COLOR = theme["TEXT_COLOR"]
+    ACCENT_COLOR = theme["ACCENT_COLOR"]
     
     # --- 1. Title Slide ---
     slide = prs.slides.add_slide(prs.slide_layouts[0]) # Title Slide
@@ -106,9 +134,6 @@ def create_styled_presentation(slides_data):
             p.font.color.rgb = TEXT_COLOR
             p.level = 0
             p.space_after = Pt(14) # Add spacing
-            
-            # Custom Bullet character (can't easily change bullet symbol, but can simulate with text)
-            # Standard pptx bullets are automatic.
             
         # Add Speaker Notes
         if "speaker_notes" in slide_data and slide.has_notes_slide:

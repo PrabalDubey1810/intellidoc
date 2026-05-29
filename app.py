@@ -13,6 +13,7 @@ import youtube_utils
 import slidesgpt_utils
 import gemini_utils
 import pptx_utils
+import podcast_utils
 import io
 
 st.set_page_config(page_title="Chatbot - Powered by Open Source LLM")
@@ -26,7 +27,7 @@ cookie_manager = get_manager()
 # Application Logic
 from llm_utils import generate_response, MODEL_NAME
 
-# -------- PDF TEXT EXTRACTION --------
+# -------- PDF TEXT EXTRACTION --------.v
 def extract_pdf_text(uploaded_files):
     text = ""
     for uploaded_file in uploaded_files:
@@ -108,7 +109,7 @@ def main_app():
 
     # Interactive Features
     with st.sidebar.expander("Interactive Features"):
-        feature_mode = st.radio("Select Mode", ["Chat", "Audio Summary", "Quiz", "Knowledge Graph", "Slide Deck", "YouTube Assistant"])
+        feature_mode = st.radio("Select Mode", ["Chat", "Audio Summary", "Podcast", "Quiz", "Knowledge Graph", "Slide Deck", "YouTube Assistant"])
 
     if feature_mode == "Chat":
         for msg in st.session_state.messages:
@@ -147,6 +148,98 @@ def main_app():
                     st.audio(audio_fp, format='audio/mp3')
             else:
                 st.warning("Please upload a PDF first.")
+
+    elif feature_mode == "Podcast":
+        st.subheader("🎙️ AI Podcast Studio")
+        
+        # Two-person animation CSS
+        st.markdown("""
+        <style>
+        @keyframes talk-animation {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
+            50% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+        }
+        .host-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 20px;
+            background-color: #f0f2f6;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .host {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-size: cover;
+            position: relative;
+            border: 3px solid #4CAF50;
+        }
+        .host-1 {
+            background-image: url('https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'); 
+            animation: talk-animation 2s infinite ease-in-out;
+        }
+        .host-2 {
+            background-image: url('https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka');
+            animation: talk-animation 2s infinite ease-in-out 1s; /* Offset animation */
+        }
+        .host-label {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        </style>
+        
+        <div class="host-container">
+            <div>
+                <div class="host host-1"></div>
+                <div class="host-label">Host 1 (US)</div>
+            </div>
+            <div style="font-size: 2rem;">🎙️</div>
+            <div>
+                <div class="host host-2"></div>
+                <div class="host-label">Host 2 (UK)</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("Generate Podcast"):
+            if st.session_state.pdf_context:
+                with st.spinner("Writing script & Recording audio (this may take a minute)..."):
+                    
+                    # 1. Generate Script (Using MiniMax via llm_utils)
+                    script_data = podcast_utils.generate_podcast_script(st.session_state.pdf_context)
+                    
+                    if isinstance(script_data, list) and len(script_data) > 0:
+                        if script_data[0].get("speaker") == "System":
+                            st.error(script_data[0].get("text"))
+                        else:
+                            st.session_state.podcast_script = script_data
+                            
+                            # 2. Generate Audio
+                            audio_file = podcast_utils.generate_podcast_audio(script_data)
+                            st.session_state.podcast_audio = audio_file
+                            
+                            st.success("Podcast generated successfully!")
+                    else:
+                        st.error("Failed to generate valid script.")
+                        st.write(script_data)
+            else:
+                st.warning("Please upload a PDF first.")
+
+        # Display Results
+        if "podcast_audio" in st.session_state:
+            st.audio(st.session_state.podcast_audio, format='audio/mp3')
+            
+        if "podcast_script" in st.session_state:
+            with st.expander("View Script"):
+                for line in st.session_state.podcast_script:
+                    speaker = line.get('speaker', 'Unknown')
+                    text = line.get('text', '')
+                    st.markdown(f"**{speaker}**: {text}")
 
     elif feature_mode == "Quiz":
         st.subheader("📝 PDF Quiz")
@@ -222,7 +315,7 @@ def main_app():
         st.subheader("📽️ Smart Slide Deck (via Google Gemini)")
         
         # API Key (Hardcoded as requested)
-        api_key = "AIzaSyBjKHF_ajrqyiNjUUgFvoOZWaXMtpRS-CM"
+        api_key = "AIzaSyCLq4jIHyPZlXWQR-6GyT7JPhGGyDBD5dE"
         
         if st.button("Generate Slides"):
              if st.session_state.pdf_context:

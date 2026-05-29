@@ -119,7 +119,7 @@ def main():
     application.add_handler(echo_handler)
     
     print("Bot is polling...")
-    application.run_polling()
+    application.run_polling(bootstrap_retries=5)
 
 if __name__ == "__main__":
     main()
