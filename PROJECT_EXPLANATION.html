@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelliDoc AI - Project Documentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #475569;
+            --accent: #10b981;
+            --bg: #ffffff;
+            --text: #1e293b;
+            --code-bg: #f8fafc;
+            --border: #e2e8f0;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --text: #f1f5f9;
+                --code-bg: #1e293b;
+                --border: #334155;
+            }
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--bg);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        h1, h2, h3, h4 {
+            color: var(--primary);
+            margin-top: 2em;
+        }
+        h1 { font-size: 2.5em; text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        h2 { font-size: 1.8em; border-left: 5px solid var(--primary); padding-left: 15px; }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+        code { font-family: 'Fira Code', monospace; background: var(--code-bg); padding: 2px 4px; border-radius: 4px; }
+        .feature-card {
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .file-path { color: var(--secondary); font-weight: 600; font-size: 0.9em; margin-bottom: 10px; display: block; }
+        .toc {
+            background: var(--code-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+        }
+        .toc ul { list-style: none; padding-left: 0; }
+        .toc li { margin-bottom: 10px; }
+        .toc a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        .toc a:hover { text-decoration: underline; }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-right: 10px;
+            background: var(--primary);
+            color: white;
+        }
+        .page-break { page-break-before: always; }
+    </style>
+</head>
+<body>
+
+    <h1>IntelliDoc AI - Project Documentation</h1>
+    
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <ul>
+            <li><a href="#overview">1. Project Overview</a></li>
+            <li><a href="#architecture">2. System Architecture</a></li>
+            <li><a href="#backend">3. Backend Implementation</a>
+                <ul>
+                    <li><a href="#app-py">app.py (Streamlit Entry)</a></li>
+                    <li><a href="#api-py">api.py (Flask REST API)</a></li>
+                    <li><a href="#auth-py">auth.py (Authentication & DB)</a></li>
+                    <li><a href="#llm-utils">llm_utils.py (LLM Interface)</a></li>
+                </ul>
+            </li>
+            <li><a href="#features">4. Key Features & Utilities</a>
+                <ul>
+                    <li><a href="#agent">Autonomous Agents (agent_utils.py)</a></li>
+                    <li><a href="#slides">Slide Generation (gemini_utils.py)</a></li>
+                    <li><a href="#youtube">YouTube Analysis (youtube_utils.py)</a></li>
+                    <li><a href="#podcast">Podcast Creator (podcast_utils.py)</a></li>
+                </ul>
+            </li>
+            <li><a href="#frontend">5. Frontend Implementation (React)</a></li>
+            <li><a href="#conclusion">6. How to Run & Conclusion</a></li>
+        </ul>
+    </div>
+
+    <section id="overview">
+        <h2>1. Project Overview</h2>
+        <p>
+            IntelliDoc AI is an advanced document intelligence platform designed to transform how users interact with their documents. 
+            Moving beyond simple text extraction, it leverages state-of-the-art Large Language Models (LLMs) to provide interactive chatting, 
+            multimedia content creation (podcasts and slides), and autonomous research capabilities.
+        </p>
+        <div class="feature-card">
+            <h3>Key Capabilities:</h3>
+            <ul>
+                <li><strong>Contextual PDF Chat</strong>: Ask questions directly to your documents.</li>
+                <li><strong>Autonomous Agents</strong>: Perform complex tasks like flight searches or stock price analysis.</li>
+                <li><strong>Multimedia Conversion</strong>: Turn PDFs into engaging 2-host podcasts or professional slide decks.</li>
+                <li><strong>Visual Intelligence</strong>: Generate knowledge graphs from unstructured text.</li>
+                <li><strong>Video Synergy</strong>: Process YouTube videos and chat with their transcripts.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="architecture">
+        <h2>2. System Architecture</h2>
+        <p>
+            The project employs a <strong>Hybrid Architecture</strong> to cater to different user needs:
+        </p>
+        <p>
+            <strong>Stack A: Streamlit (Rapid Prototyping)</strong><br>
+            A monolithic approach using <code>app.py</code> for an all-in-one Python-based interface. 
+            Ideal for quick local deployment and testing of individual features.
+        </p>
+        <p>
+            <strong>Stack B: React + Flask (Scalable Web App)</strong><br>
+            A modern client-server architecture. The <strong>Backend (Flask)</strong> handles LLM integrations, 
+            PDF processing, and Database management, while the <strong>Frontend (React + Vite)</strong> provides 
+            a premium, responsive user experience.
+        </p>
+        <p>
+            <strong>Intelligence Layer</strong><br>
+            The system interfaces with <strong>Ollama (Local LLMs)</strong> for privacy and <strong>Google Gemini / MiniMax</strong> 
+            for high-performance cloud processing.
+        </p>
+    </section>
+
+    <div class="page-break"></div>
+
+    <section id="backend">
+        <h2>3. Backend Implementation</h2>
+        <p>The backend serves as the brain of IntelliDoc, orchestrating data flow between the UI and the AI models.</p>
+
+        <h3 id="app-py">app.py</h3>
+        <span class="file-path">Location: /app.py</span>
+        <p>This file contains the Streamlit implementation. It manages the session state, file uploads, and renders the interactive sidebar and main chat window.</p>
+        <details>
+            <summary>Click to view code snippet (Partial)</summary>
+            <pre>
+import streamlit as st
+from pypdf import PdfReader
+import auth
+from llm_utils import generate_response
+
+st.set_page_config(page_title="IntelliDoc AI")
+
+# PDF Text Extraction logic
+def extract_pdf_text(uploaded_files):
+    text = ""
+    for uploaded_file in uploaded_files:
+        reader = PdfReader(uploaded_file)
+        for page in reader.pages:
+            text += page.extract_text() + "\n"
+    return text
+
+# Main App Loop
+if st.session_state.user:
+    st.title("💬 Chatbot")
+    uploaded_pdfs = st.sidebar.file_uploader("Upload PDFs", type=["pdf"])
+    # ... logic for handling chat and features ...
+            </pre>
+        </details>
+
+        <h3 id="api-py">api.py</h3>
+        <span class="file-path">Location: /api.py</span>
+        <p>The Flask server that powers the React frontend. It provides RESTful endpoints for authentication, chat, PDF processing, and specialized features.</p>
+        <details>
+            <summary>Click to view key endpoints</summary>
+            <pre>
+@app.route("/api/chat", methods=["POST"])
+def chat():
+    # Handles user messages and PDF context
+    # Calls generate_response from llm_utils
+    pass
+
+@app.route("/api/slides", methods=["POST"])
+def slides():
+    # Triggers Gemini slide generation and PPTX creation
+    pass
+
+@app.route("/api/upload-pdf", methods=["POST"])
+def upload_pdf():
+    # Extracts text from uploaded files using pypdf
+    pass
+            </pre>
+        </details>
+
+        <h3 id="auth-py">auth.py</h3>
+        <span class="file-path">Location: /auth.py</span>
+        <p>Manages the <code>users.db</code> SQLite database. It uses salt-based PBKDF2 hashing for securing user passwords.</p>
+        <pre>
+def hash_password(password, salt=None):
+    if salt is None:
+        salt = os.urandom(32)
+    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+    return pwd_hash, salt
+
+def authenticate_user(username, password):
+    # Logic to verify stored hash against input
+    pass
+        </pre>
+
+        <h3 id="llm-utils">llm_utils.py</h3>
+        <span class="file-path">Location: /llm_utils.py</span>
+        <p>A unified interface for communicating with Ollama and cloud LLMs via standard HTTP requests.</p>
+        <pre>
+def generate_response(messages, model_name=None):
+    url = f"{OLLAMA_BASE_URL}/api/chat"
+    data = {
+        "model": model_name or MODEL_NAME,
+        "messages": messages,
+        "stream": True # Handles streaming response objects
+    }
+    # ... urllib.request logic to parse streaming JSON ...
+        </pre>
+    </section>
+
+    <div class="page-break"></div>
+
+    <section id="features">
+        <h2>4. Key Features & Utilities</h2>
+        
+        <h3 id="agent">Autonomous Agents</h3>
+        <span class="file-path">File: agent_utils.py</span>
+        <p>This module implements an "Agent Mode" where the AI can use tools like stock checking or flight info searching autonomously.</p>
+        <pre>
+def get_stock_price(symbol: str) -> str:
+    # Tool declaration for agent use
+    pass
+
+def run_agent_task(task_description: str):
+    # Uses Gemini-2.5-Flash to decide which tools to call
+    model = genai.GenerativeModel('gemini-2.5-flash', tools=tools)
+    chat = model.start_chat()
+    # Autonomous loop to gather info before answering
+    pass
+        </pre>
+
+        <h3 id="slides">Slide Generation</h3>
+        <span class="file-path">Files: gemini_utils.py & pptx_utils.py</span>
+        <p>A multi-step process: First, Gemini analyzes the PDF to create structured JSON content, then <code>pptx_utils</code> builds a styled .pptx file.</p>
+        <pre>
+# gemini_utils.py
+def generate_slide_content(text_context, api_key):
+    # Prompting Gemini to return JSON with titles and bullets
+    pass
+
+# pptx_utils.py - Styled slide creation
+THEMES = {
+    "midnight": { "BG_COLOR": (20, 20, 30), "TITLE_COLOR": (255, 200, 0) },
+}
+def create_styled_presentation(slides_data, theme_name="midnight"):
+    # Custom styling for backgrounds, fonts, and accents
+    pass
+        </pre>
+
+        <h3 id="youtube">YouTube Analysis</h3>
+        <span class="file-path">File: youtube_utils.py</span>
+        <p>Extracts transcripts from YouTube videos using <code>youtube-transcript-api</code>, enabling conversation with video content.</p>
+        <pre>
+def extract_video_id(url):
+    # Regex for extracting the video ID
+    pass
+
+def get_transcript_text(video_id):
+    # Fetches transcript and joins into single string
+    pass
+        </pre>
+
+        <h3 id="podcast">Podcast Creator</h3>
+        <span class="file-path">File: podcast_utils.py</span>
+        <p>Simulates a 2-host podcast conversation. It generates a script with varying personalities and uses Google Text-to-Speech (gTTS) with different regional accents (US vs. UK) for the hosts.</p>
+        <pre>
+def generate_podcast_audio(script):
+    for line in script:
+        if "Host 1" in line["speaker"]:
+            tts = gTTS(text=line["text"], lang='en', tld='us')
+        else:
+            tts = gTTS(text=line["text"], lang='en', tld='co.uk')
+    # Combined into a single MP3 stream
+        </pre>
+    </section>
+
+    <div class="page-break"></div>
+
+    <section id="frontend">
+        <h2>5. Frontend Implementation (React)</h2>
+        <p>The frontend is a modern React application built with <strong>Vite</strong> and <strong>Vanilla CSS</strong>, emphasizing a premium "Glassmorphic" look with vibrant colors and smooth transitions.</p>
+        
+        <div class="feature-card">
+            <h3>Architecture highlights:</h3>
+            <ul>
+                <li><strong>Dynamic Routing</strong>: Uses React Router for seamless navigation between features.</li>
+                <li><strong>Context Management</strong>: <code>AuthContext.jsx</code> handles global user state and persistence.</li>
+                <li><strong>Responsive Sidebar</strong>: Unified control center for switching between Chat, Agent, and multimedia modes.</li>
+                <li><strong>Premium UI</strong>: Custom CSS tokens for dark mode, glassmorphism, and subtle micro-animations.</li>
+            </ul>
+        </div>
+
+        <h3>API Integration (frontend/src/api.js)</h3>
+        <p>Centralized module for communicating with the Flask backend.</p>
+        <pre>
+import axios from "axios";
+const API_BASE_URL = "http://localhost:5000/api";
+
+export const chatWithBot = async (messages, pdfContext, model) => {
+    const response = await axios.post(`${API_BASE_URL}/chat`, {
+        messages, pdf_context: pdfContext, model
+    }, { withCredentials: true });
+    return response.data;
+};
+        </pre>
+
+        <h3>Key Pages</h3>
+        <p>The frontend is divided into specialized pages for each core functionality:</p>
+        <ul>
+            <li><strong>ChatPage.jsx</strong>: Real-time chat interface with PDF context injection.</li>
+            <li><strong>AgentPage.jsx</strong>: Visual terminal for observing autonomous agent "Thinking" and "Action" steps.</li>
+            <li><strong>YouTubePage.jsx</strong>: Integrated video player with sidebar for summary and transcript chat.</li>
+            <li><strong>PodcastPage.jsx</strong>: Studio-like interface for generating and playing AI conversations.</li>
+        </ul>
+    </section>
+
+    <div class="page-break"></div>
+
+    <section id="conclusion">
+        <h2>6. How to Run & Conclusion</h2>
+        <div class="feature-card">
+            <h3>Step-by-Step Setup:</h3>
+            <ol>
+                <li><strong>Backend</strong>: 
+                    <pre>pip install -r requirements.txt
+python api.py</pre>
+                </li>
+                <li><strong>Frontend</strong>: 
+                    <pre>cd frontend
+npm install
+npm run dev</pre>
+                </li>
+                <li><strong>Ollama</strong>: Ensure Ollama is installed and the models (e.g., <code>minimax-m2:cloud</code> or <code>qwen3-vl</code>) are available.</li>
+            </ol>
+        </div>
+        <p>
+            IntelliDoc AI is a comprehensive AI solution that bridges the gap between static documents and interactive intelligence. 
+            By combining multiple specialized models and a premium user interface, it provides a powerful toolkit for document analysis, 
+            learning, and automation.
+        </p>
+    </section>
+
+    <footer style="margin-top: 50px; text-align: center; color: var(--secondary); font-size: 0.8em; border-top: 1px solid var(--border); padding-top: 20px;">
+        Generated by IntelliDoc AI Document Engine - 2026
+    </footer>
+
+</body>
+</html>

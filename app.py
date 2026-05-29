@@ -1,6 +1,11 @@
 import streamlit as st
 import litellm
 import urllib.request
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from pypdf import PdfReader
 import auth
@@ -314,8 +319,8 @@ def main_app():
     elif feature_mode == "Slide Deck":
         st.subheader("📽️ Smart Slide Deck (via Google Gemini)")
         
-        # API Key (Hardcoded as requested)
-        api_key = ""
+        # API Key loaded from environment
+        api_key = os.getenv("GEMINI_API_KEY")
         
         if st.button("Generate Slides"):
              if st.session_state.pdf_context:

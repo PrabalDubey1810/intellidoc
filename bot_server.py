@@ -1,5 +1,10 @@
 import os
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 import llm_utils
@@ -11,9 +16,7 @@ logging.basicConfig(
 )
 
 # --- CONFIGURATION ---
-# --- CONFIGURATION ---
-# TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
-TELEGRAM_TOKEN = ""
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
 
 import io
 from pypdf import PdfReader
