@@ -315,7 +315,7 @@ def main_app():
         st.subheader("📽️ Smart Slide Deck (via Google Gemini)")
         
         # API Key (Hardcoded as requested)
-        api_key = "AIzaSyCLq4jIHyPZlXWQR-6GyT7JPhGGyDBD5dE"
+        api_key = ""
         
         if st.button("Generate Slides"):
              if st.session_state.pdf_context:
