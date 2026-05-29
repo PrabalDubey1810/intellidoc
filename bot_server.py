@@ -13,7 +13,7 @@ logging.basicConfig(
 # --- CONFIGURATION ---
 # --- CONFIGURATION ---
 # TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
-TELEGRAM_TOKEN = "8571782168:AAG84QZgIq5k9f8aB7vslfzOXRbiKTB6z0Q"
+TELEGRAM_TOKEN = ""
 
 import io
 from pypdf import PdfReader
